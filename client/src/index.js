@@ -1,31 +1,39 @@
-import React from "react";
-import ReactDOM from "react-dom";
-import { BrowserRouter as Router, Switch, Route } from "react-router-dom";
-import { Provider } from "react-redux";
-import configureStore from "./redux/configureStore";
-import Landing from "./containers/Landing";
-import Navbar from "./containers/Navbar";
-import Catalog from "./containers/Catalog";
-import User from "./containers/User";
+const express = require("express");
+const bodyParser = require("body-parser");
 
-const store = configureStore();
+const app = express();
 
-const App = () => (
-  <Router>
-    <div>
-      <Navbar />
-      <Switch>
-        <Route component={Landing} exact path="/" />
-        <Route component={Catalog} path="/catalog" />
-        <Route component={User} patch="/user" />
-      </Switch>
-    </div>
-  </Router>
-);
+if (process.env.NODE_ENV !== "production") {
+  // Development environment -->
+  require("dotenv").config();
+  if (!process.env.DEBUG) process.env.DEBUG = "server";
+} // <-- Development environment
+if (process.env.DEBUG === "server") {
+  const morgan = require("morgan");
+  app.use(morgan("tiny"));
+}
 
-ReactDOM.render(
-  <Provider store={store}>
-    <App />
-  </Provider>,
-  document.getElementById("root")
-);
+//Set up mongoose connection
+const mongoose = require('mongoose');
+const mongoDB = 'mongodb://any:team@ds259268.mlab.com:59268/farm-app';
+mongoose.connect(mongoDB);
+mongoose.Promise = global.Promise;
+const db = mongoose.connection;
+db.on('error', console.error.bind(console, 'MongoDB connection error:'));
+
+// CORS middleware
+var cors = require("cors");
+
+app.use(cors());
+
+// Body parser configuration
+app.use(bodyParser.json({ type: "*/*" }));
+
+app.get("/ping", (req, res) => res.send("pong"));
+
+
+//Server Setup
+const port = process.env.PORT || 3001;
+
+app.listen(port);
+console.log("Server listening on Port", port);
